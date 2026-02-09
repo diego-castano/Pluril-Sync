@@ -20,8 +20,18 @@ def _run_sync():
     from sync.config import SHEET_ID_MATERIALES, SHEET_ID_MANO_OBRA
 
     now = datetime.utcnow()
-    result_m = run_sync_materiales_month(now.year, now.month, sheet_id=SHEET_ID_MATERIALES)
-    result_l = sync_mano_obra(sheet_id=SHEET_ID_MANO_OBRA)
+    result_m = {"ok": False, "rows_written": 0, "error": "no ejecutado"}
+    result_l = {"ok": False, "rows_written": 0, "error": "no ejecutado"}
+
+    try:
+        result_m = run_sync_materiales_month(now.year, now.month, sheet_id=SHEET_ID_MATERIALES)
+    except Exception as e:
+        result_m = {"ok": False, "rows_written": 0, "error": str(e)}
+
+    try:
+        result_l = sync_mano_obra(sheet_id=SHEET_ID_MANO_OBRA)
+    except Exception as e:
+        result_l = {"ok": False, "rows_written": 0, "error": str(e), "file_name": ""}
 
     return {
         "materiales": result_m,

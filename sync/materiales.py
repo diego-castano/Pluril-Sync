@@ -11,6 +11,10 @@ from requests.adapters import HTTPAdapter
 from typing import List, Optional
 from urllib3.util.ssl_ import create_urllib3_context
 
+# Evitar warning al usar verify=False solo para la API Remitos
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 from .config import (
     REMITOS_API_URL,
     REMITOS_BEARER_TOKEN,
@@ -51,10 +55,12 @@ def fetch_remitos(from_date: str, to_date: str) -> List[dict]:
     url += f"fromDate={from_date}&toDate={to_date}"
     session = requests.Session()
     session.mount("https://", _TLSCompatAdapter())
+    # verify=False: servidor Remitos puede usar cert autofirmado o TLS antiguo
     resp = session.get(
         url,
         headers={"Authorization": f"Bearer {REMITOS_BEARER_TOKEN}"},
         timeout=30,
+        verify=False,
     )
     resp.raise_for_status()
     data = resp.json()
