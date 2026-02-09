@@ -30,11 +30,13 @@ SHEET_NAME_MATERIALES = "Materiales"
 
 
 class _TLSCompatAdapter(HTTPAdapter):
-    """Adapter que permite TLS 1.0/1.1 para servidores legacy (ej. API Remitos)."""
+    """Adapter para API Remitos: TLS 1.0+ y sin verificación de certificado (servidor legacy)."""
 
     def init_poolmanager(self, *args, **kwargs):
         ctx = create_urllib3_context()
         ctx.minimum_version = ssl.TLSVersion.TLSv1
+        ctx.verify_mode = ssl.CERT_NONE
+        ctx.check_hostname = False
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
 
@@ -55,12 +57,11 @@ def fetch_remitos(from_date: str, to_date: str) -> List[dict]:
     url += f"fromDate={from_date}&toDate={to_date}"
     session = requests.Session()
     session.mount("https://", _TLSCompatAdapter())
-    # verify=False: servidor Remitos puede usar cert autofirmado o TLS antiguo
+    # Verificación desactivada en el adapter (CERT_NONE + check_hostname=False)
     resp = session.get(
         url,
         headers={"Authorization": f"Bearer {REMITOS_BEARER_TOKEN}"},
         timeout=30,
-        verify=False,
     )
     resp.raise_for_status()
     data = resp.json()
