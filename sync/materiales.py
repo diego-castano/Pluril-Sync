@@ -64,7 +64,7 @@ def fetch_remitos(from_date: str, to_date: str) -> List[dict]:
     resp = session.get(
         url,
         headers={"Authorization": f"Bearer {REMITOS_BEARER_TOKEN}"},
-        timeout=30,
+        timeout=10,
     )
     resp.raise_for_status()
     data = resp.json()

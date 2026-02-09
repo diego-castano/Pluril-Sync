@@ -17,16 +17,19 @@ SYNC_SECRET = os.environ.get("SYNC_SECRET", "")
 def _run_sync():
     from sync.materiales import run_sync_materiales_month
     from sync.mano_obra import sync_mano_obra
-    from sync.config import SHEET_ID_MATERIALES, SHEET_ID_MANO_OBRA
+    from sync.config import SHEET_ID_MATERIALES, SHEET_ID_MANO_OBRA, SKIP_MATERIALES_SYNC
 
     now = datetime.utcnow()
     result_m = {"ok": False, "rows_written": 0, "error": "no ejecutado"}
     result_l = {"ok": False, "rows_written": 0, "error": "no ejecutado"}
 
-    try:
-        result_m = run_sync_materiales_month(now.year, now.month, sheet_id=SHEET_ID_MATERIALES)
-    except Exception as e:
-        result_m = {"ok": False, "rows_written": 0, "error": str(e)}
+    if not SKIP_MATERIALES_SYNC:
+        try:
+            result_m = run_sync_materiales_month(now.year, now.month, sheet_id=SHEET_ID_MATERIALES)
+        except Exception as e:
+            result_m = {"ok": False, "rows_written": 0, "error": str(e)}
+    else:
+        result_m = {"ok": False, "rows_written": 0, "error": "omitido (SKIP_MATERIALES_SYNC=1): servidor Remitos requiere TLS 1.2+"}
 
     try:
         result_l = sync_mano_obra(sheet_id=SHEET_ID_MANO_OBRA)

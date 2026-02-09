@@ -26,6 +26,7 @@ Ambos Sheets están en la carpeta [Sync - Costos Materiales & Mano de Obra](http
 | `GOOGLE_CREDENTIALS_JSON` | JSON (string) de la cuenta de servicio. |
 | `GOOGLE_CREDENTIALS_PATH` | Ruta al archivo JSON de la cuenta de servicio (alternativa). |
 | `SYNC_SECRET` | (Opcional) Secreto para proteger `POST /sync`. |
+| `SKIP_MATERIALES_SYNC` | Si está en `1` o `true`, no se llama a la API Remitos (útil si el servidor no soporta TLS 1.2+ desde la nube). |
 
 ## Uso local
 
@@ -70,5 +71,6 @@ Pluril-Sync/
 
 ## Notas
 
+- **API Remitos (materiales)**: el servidor actual puede no aceptar conexiones TLS desde la nube (error `TLSV1_ALERT_PROTOCOL_VERSION`). Solución de fondo: que el dueño del servidor habilite **TLS 1.2 o superior**. Mientras tanto, en Railway podés poner `SKIP_MATERIALES_SYNC=1` para que el sync solo ejecute mano de obra y responda más rápido.
 - **Materiales**: cada ejecución de sync añade filas al Sheet (append). Si querés reemplazar el mes, hay que limpiar la hoja "Materiales" antes o implementar lógica de “upsert” por periodo.
 - **Mano de obra**: se toma el archivo del **último mes** disponible (por nombre `Costos_MM_YYYY.CSV`). Cada ejecución append esas filas con columna Periodo; si ejecutás dos veces el mismo mes, se duplican filas (podés añadir dedup por periodo si hace falta).

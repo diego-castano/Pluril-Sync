@@ -13,6 +13,8 @@ except ImportError:
     pass
 
 # --- Remitos API (costos de materiales) ---
+# Si el servidor Remitos no soporta TLS 1.2+ desde la nube, poner SKIP_MATERIALES_SYNC=1
+SKIP_MATERIALES_SYNC = os.environ.get("SKIP_MATERIALES_SYNC", "").strip().lower() in ("1", "true", "yes")
 REMITOS_API_URL = os.environ.get(
     "REMITOS_API_URL",
     "https://642f0538ae6d.sn.mynetname.net:5010/api/Remitos",
