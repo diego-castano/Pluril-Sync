@@ -4,9 +4,12 @@ Cada documento tiene CUENTA + DESCCUENTA = obra; el sheet se organiza por obra.
 """
 from __future__ import annotations
 
+import ssl
 import requests
 from datetime import datetime
+from requests.adapters import HTTPAdapter
 from typing import List, Optional
+from urllib3.util.ssl_ import create_urllib3_context
 
 from .config import (
     REMITOS_API_URL,
@@ -22,10 +25,21 @@ MONEDA_LABEL = {1: "Pesos", 2: "Dólares"}
 SHEET_NAME_MATERIALES = "Materiales"
 
 
+class _TLSCompatAdapter(HTTPAdapter):
+    """Adapter que permite TLS 1.0/1.1 para servidores legacy (ej. API Remitos)."""
+
+    def init_poolmanager(self, *args, **kwargs):
+        ctx = create_urllib3_context()
+        ctx.minimum_version = ssl.TLSVersion.TLSv1
+        kwargs["ssl_context"] = ctx
+        return super().init_poolmanager(*args, **kwargs)
+
+
 def fetch_remitos(from_date: str, to_date: str) -> List[dict]:
     """
     Llama a la API Remitos y devuelve la lista de documentos.
     from_date / to_date: YYYY-MM-DD
+    El servidor Remitos puede usar TLS antiguo; usamos un adapter que lo permite.
     """
     if not REMITOS_BEARER_TOKEN:
         raise ValueError("REMITOS_BEARER_TOKEN no configurado")
@@ -35,7 +49,9 @@ def fetch_remitos(from_date: str, to_date: str) -> List[dict]:
     else:
         url += "?"
     url += f"fromDate={from_date}&toDate={to_date}"
-    resp = requests.get(
+    session = requests.Session()
+    session.mount("https://", _TLSCompatAdapter())
+    resp = session.get(
         url,
         headers={"Authorization": f"Bearer {REMITOS_BEARER_TOKEN}"},
         timeout=30,
