@@ -3,8 +3,9 @@ App Flask para Railway: expone un endpoint que ejecuta la sincronización
 (materiales + mano de obra). El cron se puede configurar después para llamar a este endpoint.
 """
 import os
+import traceback
 from flask import Flask, jsonify, request
-from datetime import datetime, timedelta
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -42,7 +43,10 @@ def sync():
         out = _run_sync()
         return jsonify(out)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        msg = str(e) or repr(e)
+        tb = traceback.format_exc()
+        app.logger.error("Sync failed: %s\n%s", msg, tb)
+        return jsonify({"error": msg, "traceback": tb}), 500
 
 
 if __name__ == "__main__":
