@@ -9,9 +9,7 @@ import requests
 from datetime import datetime
 from requests.adapters import HTTPAdapter
 from typing import List, Optional
-from urllib3.util.ssl_ import create_urllib3_context
 
-# Evitar warning al usar verify=False solo para la API Remitos
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -29,15 +27,20 @@ MONEDA_LABEL = {1: "Pesos", 2: "Dólares"}
 SHEET_NAME_MATERIALES = "Materiales"
 
 
+def _remitos_ssl_context() -> ssl.SSLContext:
+    """Contexto SSL para API Remitos: TLS 1.0+ y sin verificación (servidor legacy)."""
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    ctx.minimum_version = ssl.TLSVersion.TLSv1
+    return ctx
+
+
 class _TLSCompatAdapter(HTTPAdapter):
-    """Adapter para API Remitos: TLS 1.0+ y sin verificación de certificado (servidor legacy)."""
+    """Adapter para API Remitos usando contexto sin verificación."""
 
     def init_poolmanager(self, *args, **kwargs):
-        ctx = create_urllib3_context()
-        ctx.minimum_version = ssl.TLSVersion.TLSv1
-        ctx.verify_mode = ssl.CERT_NONE
-        ctx.check_hostname = False
-        kwargs["ssl_context"] = ctx
+        kwargs["ssl_context"] = _remitos_ssl_context()
         return super().init_poolmanager(*args, **kwargs)
 
 
